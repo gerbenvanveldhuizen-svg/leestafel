@@ -36,16 +36,18 @@ def fetch(url: str, wachttijden=(0, 5, 20, 60)) -> bytes:
         if wacht:
             time.sleep(wacht)
         try:
-            r = subprocess.run(["curl", "-s", "-L", "--compressed", "--fail", "--max-time", "25", "-A", UA,
+            r = subprocess.run(["curl", "-s", "-L", "--compressed", "--max-time", "25", "-A", UA,
                                 "-H", "Accept: */*", "-H", "Accept-Language: nl-NL,nl;q=0.9",
-                                "-H", "Cache-Control: no-cache", url],
+                                "-H", "Cache-Control: no-cache", "-w", "\n%{http_code}", url],
                                capture_output=True, check=True)
-            data = r.stdout
+            data, _, code = r.stdout.rpartition(b"\n")
+            if not code.isdigit() or int(code) >= 400:
+                raise RuntimeError(f"HTTP {code.decode(errors='ignore')}")
             break
         except Exception as e:
             laatste = e
     else:
-        raise RuntimeError(f"ophalen mislukt na {len(wachttijden)} pogingen: {url}") from laatste
+        raise RuntimeError(f"ophalen mislukt na {len(wachttijden)} pogingen ({laatste}): {url}") from laatste
     if data[:2] == bytes([31, 139]):  # gzip-magic
         data = gzip.GzipFile(fileobj=io.BytesIO(data)).read()
     return data
