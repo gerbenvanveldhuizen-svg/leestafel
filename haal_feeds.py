@@ -39,7 +39,8 @@ def fetch(url: str, wachttijden=(0, 5, 20, 60)) -> bytes:
             r = subprocess.run(["curl", "-s", "-L", "--compressed", "--max-time", "25", "-A", UA,
                                 "-H", "Accept: */*", "-H", "Accept-Language: nl-NL,nl;q=0.9",
                                 "-H", "Cache-Control: no-cache", "-w", "\n%{http_code}", url],
-                               capture_output=True, check=True)
+                               capture_output=True, check=True,
+                               creationflags=0x08000000 if os.name == "nt" else 0)  # geen vensters op Windows
             data, _, code = r.stdout.rpartition(b"\n")
             if not code.isdigit() or int(code) >= 400:
                 raise RuntimeError(f"HTTP {code.decode(errors='ignore')}")

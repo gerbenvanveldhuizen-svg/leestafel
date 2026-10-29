@@ -50,6 +50,31 @@ def versleutel(data: bytes, sleutel: bytes) -> dict:
     return {"v": 1, "iter": ITERATIES, "iv": b64(iv), "ct": b64(ct)}
 
 
+def voeg_thuis_toe(items, fouten, wachtwoord, pad: Path):
+    """Berichten die de pc thuis ophaalde (bronnen die GitHub weigeren) aan de editie toevoegen."""
+    if not pad.exists():
+        return items, fouten
+    try:
+        pakket = json.loads(pad.read_text(encoding="utf-8"))
+        ruw = AESGCM(leid_sleutel_af(wachtwoord)).decrypt(base64.b64decode(pakket["iv"]), base64.b64decode(pakket["ct"]), None)
+        thuis = json.loads(ruw)
+    except Exception as e:
+        print("thuisaanvulling onleesbaar:", e)
+        return items, fouten
+    leeftijd = datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(thuis["updatedAt"])
+    if leeftijd > datetime.timedelta(days=4):
+        print("thuisaanvulling te oud, overgeslagen:", thuis["updatedAt"])
+        return items, fouten
+    bekend = {it["id"] for it in items}
+    nieuw = [it for it in thuis.get("items", []) if it["id"] not in bekend]
+    bronnen = {it["source"] for it in nieuw}
+    # Vers genoeg (minder dan een dag)? Dan geen "vorige editie"-melding voor die bronnen.
+    if leeftijd < datetime.timedelta(hours=24):
+        fouten = [f for f in fouten if f["bron"] not in bronnen]
+    print(f"thuisaanvulling: {len(nieuw)} berichten ({', '.join(sorted(bronnen))}), van {thuis['updatedAt']}")
+    return items + nieuw, fouten
+
+
 def main():
     wachtwoord = sleutel_wachtwoord()
     haal_feeds.main()
@@ -62,10 +87,13 @@ def main():
     items.sort(key=lambda x: x.get("published") or "", reverse=True)
 
     status = json.loads((uit / "status.json").read_text(encoding="utf-8"))
+    fouten = [{"bron": e.get("bron"), "fout": str(e.get("fout", ""))[:120]} for e in status.get("errors", [])]
+    items, fouten = voeg_thuis_toe(items, fouten, wachtwoord, uit / "thuis.json")
+    items.sort(key=lambda x: x.get("published") or "", reverse=True)
     editie = {
         "updatedAt": status.get("updatedAt"),
         "counts": status.get("counts", {}),
-        "errors": [{"bron": e.get("bron"), "fout": str(e.get("fout", ""))[:120]} for e in status.get("errors", [])],
+        "errors": fouten,
         "items": items,
     }
     ruw = json.dumps(editie, ensure_ascii=False, separators=(",", ":")).encode("utf-8")

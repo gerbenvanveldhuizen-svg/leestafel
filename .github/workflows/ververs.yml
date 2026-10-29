@@ -41,6 +41,12 @@ jobs:
           key: uit-${{ github.run_id }}
           restore-keys: uit-
 
+      # BNR en sommige Substacks weigeren GitHub-servers; die haalt de pc thuis op (tak `thuis`).
+      - name: Thuisaanvulling ophalen
+        run: |
+          mkdir -p uit
+          if git fetch -q origin thuis 2>/dev/null; then git show origin/thuis:thuis.json > uit/thuis.json; else rm -f uit/thuis.json; fi
+
       - name: Editie bouwen
         env:
           LEESTAFEL_SLEUTEL: ${{ secrets.LEESTAFEL_SLEUTEL }}
