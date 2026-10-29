@@ -1,0 +1,67 @@
+name: Leestafel verversen
+
+on:
+  schedule:
+    # Tijden in UTC: 05:30, 11:30 en 16:30 in de winter, een uur later in de zomer.
+    - cron: "30 4,10,15 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: leestafel
+  cancel-in-progress: false
+
+jobs:
+  editie:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Benodigdheden
+        run: pip install cryptography
+
+      # Vorige editie en opgehaalde teksten bewaren: valt een bron uit, dan blijft zijn laatste nieuws staan.
+      - name: Vorige editie
+        uses: actions/cache@v4
+        with:
+          path: uit
+          key: uit-${{ github.run_id }}
+          restore-keys: uit-
+
+      - name: Editie bouwen
+        env:
+          LEESTAFEL_SLEUTEL: ${{ secrets.LEESTAFEL_SLEUTEL }}
+        run: python bouw.py
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+      # GitHub zet geplande taken stil na 60 dagen zonder activiteit; één lege commit per maand voorkomt dat.
+      - name: Actief houden
+        if: github.event_name == 'schedule'
+        run: |
+          if [ "$(date -u +%d)" = "01" ] && [ "$(date -u +%H)" -lt "6" ]; then
+            git config user.name "leestafel-bot"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit --allow-empty -m "Leestafel actief houden"
+            git push
+          fi
