@@ -10,9 +10,10 @@
     { id: "alles",         label: "Alles",         color: null },
     { id: "voorjou",       label: "Voor jou",      color: null },
     { id: "rd",            label: "RD",            color: "var(--c-rd)" },
-    { id: "bnr",           label: "BNR",           color: "var(--c-bnr)" },
-    { id: "nu",            label: "NU.nl",         color: "var(--c-nu)" },
+    { id: "nd",            label: "ND",            color: "var(--c-nd)" },
     { id: "dagaandag",     label: "Dag aan Dag",   color: "var(--c-dad)" },
+    { id: "nos",           label: "NOS",           color: "var(--c-nos)" },
+    { id: "nu",            label: "NU.nl",         color: "var(--c-nu)" },
     { id: "nieuwsbrieven", label: "Nieuwsbrieven", color: "var(--c-nb)" },
     { id: "bewaard",       label: "Aangestreept",  color: null },
   ];
@@ -135,7 +136,7 @@
     const d = new Date(editie.updatedAt);
     const k = dayKey(d) === dayKey(new Date()) ? "" : fmtShort.format(d) + " ";
     $("updated").innerHTML = `editie ${esc(k)}${esc(fmtTime.format(d))}${fromCache || !navigator.onLine ? '<span class="off">offline</span>' : ""}`;
-    const NAMEN = { rd: "RD", bnr: "BNR", nu: "NU.nl", dagaandag: "Dag aan Dag", nieuwsbrieven: "nieuwsbrieven" };
+    const NAMEN = { rd: "RD", nd: "ND", nos: "NOS", nu: "NU.nl", dagaandag: "Dag aan Dag", nieuwsbrieven: "nieuwsbrieven" };
     const mis = [...new Set((editie.errors || []).map(e => NAMEN[e.bron] || e.bron))];
     $("updated").title = mis.length ? `Niet bijgewerkt deze keer: ${mis.join(", ")}` : "";
     if (mis.length) $("updated").innerHTML += `<br><span style="font-size:11.5px">${esc(mis.join(", "))}: vorige editie</span>`;

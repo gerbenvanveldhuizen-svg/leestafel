@@ -1,6 +1,6 @@
 # De Leestafel
 
-Gerbens eigen krant als web-app voor telefoon, tablet en Boox. Nieuws uit het Reformatorisch Dagblad, BNR, NU.nl, Dag aan Dag en Substack-nieuwsbrieven. Werkt offline zodra de app één keer geopend is.
+Gerbens eigen krant als web-app voor telefoon, tablet en Boox. Nieuws uit het Reformatorisch Dagblad, Nederlands Dagblad, Dag aan Dag, NOS, NU.nl en de Substack van Cowork Operator. Werkt offline zodra de app één keer geopend is.
 
 ## Hoe het werkt
 
@@ -16,11 +16,14 @@ Open de geheime link (staat in `geheim/link.txt`, nooit op GitHub) één keer op
 
 | Bron | In de app |
 |---|---|
-| BNR | Volledige tekst |
-| Dag aan Dag | Volledig of het openbare deel |
 | Reformatorisch Dagblad | Openbare deel; de rest via "Open bij RD" met je eigen abonnement |
+| Nederlands Dagblad | Openbare deel; de rest via "Open bij ND" |
+| Dag aan Dag | Volledig of het openbare deel |
+| NOS | Volledige tekst |
 | NU.nl | Alleen de intro |
-| Substack (Cowork Operator, Carlita Shaw) | Volledige tekst uit de feed |
+| Substack (Cowork Operator) | Volledige tekst uit de feed |
+
+BNR zit er niet in: BNR weigert verzoeken van GitHub-servers (foutcode 403, botcontrole). Dat wordt niet omzeild.
 
 ## Beheer
 

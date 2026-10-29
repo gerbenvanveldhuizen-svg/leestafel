@@ -18,14 +18,14 @@ FEEDS = [
     ("rd",  "Reformatorisch Dagblad", "https://www.rd.nl/rss-feed?slug=laatste-nieuws",   "Laatste nieuws", 25),
     ("rd",  "Reformatorisch Dagblad", "https://www.rd.nl/rss-feed?slug=kerk-and-religie", "Kerk & religie", 10),
     ("rd",  "Reformatorisch Dagblad", "https://www.rd.nl/rss-feed?slug=meditatie",        "Meditatie", 3),
-    ("bnr", "BNR Nieuwsradio",        "https://www.bnr.nl/?rss",                          "Nieuws", 25),
+    ("nos", "NOS",                    "https://feeds.nos.nl/nosnieuwsalgemeen",           "NOS", 25),
+    ("nd",  "Nederlands Dagblad",     "https://www.nd.nl/rss",                            "Nederlands Dagblad", 20),
     ("nu",  "NU.nl",                  "https://www.nu.nl/rss/Algemeen",                   "Algemeen", 15),
     ("nu",  "NU.nl",                  "https://www.nu.nl/rss/Economie",                   "Economie", 8),
     ("dagaandag", "Dag aan Dag",      "https://dagaandag.com/rss",                        "Dag aan Dag", 20),
     ("nieuwsbrieven", "Cowork Operator", "https://www.coworkoperator.com/feed",          "Substack", 8),
-    ("nieuwsbrieven", "Carlita Shaw",    "https://carlitashaw.substack.com/feed",        "Substack", 8),
 ]
-BRONNAMEN = {"rd": "Reformatorisch Dagblad", "bnr": "BNR Nieuwsradio", "nu": "NU.nl",
+BRONNAMEN = {"rd": "Reformatorisch Dagblad", "nos": "NOS", "nd": "Nederlands Dagblad", "bnr": "BNR Nieuwsradio", "nu": "NU.nl",
              "dagaandag": "Dag aan Dag", "nieuwsbrieven": "Nieuwsbrieven"}  # dagaandag.com, reformatorisch platform
 
 
@@ -88,6 +88,9 @@ ITUNES_SUMMARY = "{http://www.itunes.com/dtds/podcast-1.0.dtd}summary"
 DC_DATE = "{http://purl.org/dc/elements/1.1/}date"
 CONTENT_ENCODED = "{http://purl.org/rss/1.0/modules/content/}encoded"
 
+RUIS = re.compile(r"^(?:(?:AFP|ANP|Reuters)\s+)?NOS (?:Nieuws|Sport)\s*•|Zie meer zoekresultaten|^beeld:|^Foto:|Wilt u via de|Lees ook:|^Lees meer", re.I)
+
+
 def _paras_uit_html(h, min_len=30):
     h = re.sub(r"<(script|style|noscript|svg|nav|header|footer|aside|form)[^>]*>.*?</\1>", " ", h, flags=re.S | re.I)
     m = re.search(r"<article[^>]*>(.*?)</article>", h, re.S | re.I)
@@ -95,7 +98,7 @@ def _paras_uit_html(h, min_len=30):
     out = []
     for p in re.findall(r"<p[^>]*>(.*?)</p>", body, re.S | re.I):
         t = strip_html(p)
-        if len(t) >= min_len:
+        if len(t) >= min_len and not RUIS.search(t):
             out.append(t)
     return out
 
@@ -127,7 +130,7 @@ def parse_feed(bron, naam, url, rubriek, maxn):
             body = _paras_uit_html("<article>" + encoded + "</article>", min_len=2)[:200]
         items.append({
             "id": hashlib.sha1(link.encode()).hexdigest()[:16], "source": bron, "sourceName": naam,
-            "section": cat if (cat and rubriek == naam) else rubriek, "title": title, "summary": desc[:400], "url": link, "image": img,
+            "section": cat if (cat and rubriek == naam) else ("" if rubriek == naam else rubriek), "title": title, "summary": desc[:400], "url": link, "image": img,
             "published": pub,
             **({"body": body, "bodyStatus": "full"} if body else {}),
         })
@@ -232,7 +235,7 @@ def vul_teksten(per_bron):
     cache = {k: v for k, v in cache.items() if nu_ts - v.get("ts", 0) < 4 * 86400}
     nieuw = 0
     # Eerst de bronnen met volledige tekst, dan het RD (alleen openbaar deel).
-    volgorde = sorted(per_bron.items(), key=lambda kv: {"bnr": 0, "dagaandag": 1, "rd": 2}.get(kv[0], 3))
+    volgorde = sorted(per_bron.items(), key=lambda kv: {"nos": 0, "bnr": 0, "dagaandag": 1, "nd": 2, "rd": 3}.get(kv[0], 3))
     for bron, d in volgorde:
         for item in d.values():
             if item.get("body"):

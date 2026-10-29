@@ -1,5 +1,5 @@
 /* De Leestafel — offline-opslag. Verhoog VERSIE bij elke wijziging aan de app. */
-const VERSIE = "leestafel-v1";
+const VERSIE = "leestafel-v2";
 const SHELL = ["./", "index.html", "app.js", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener("install", (e) => {

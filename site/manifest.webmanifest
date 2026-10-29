@@ -1,7 +1,7 @@
 {
   "name": "De Leestafel",
   "short_name": "Leestafel",
-  "description": "Gerbens eigen krant: RD, BNR, NU.nl, Dag aan Dag en nieuwsbrieven, ook offline.",
+  "description": "Gerbens eigen krant: RD, ND, Dag aan Dag, NOS en nieuwsbrieven, ook offline.",
   "lang": "nl",
   "start_url": "./",
   "scope": "./",
